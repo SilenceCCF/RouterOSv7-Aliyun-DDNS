@@ -11,11 +11,13 @@
 :local header "Content-Type:application/json";
 # securityToken 为用户自定义的安全令牌，可防止 PHP 代理被滥用，应与 PHP 代理中设置的一致。
 :local securityToken "Any_Random_String_8848!";
-# 调用钉钉发送通知（可选）
+# 调用钉钉机器人发送通知（可选），关键字方式。不能直接使用加签方式，因为脚本功能较弱无法签名，如要使用须像查询域名那样在 PHP 代理处实现。
 :local dingtalk "https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxx";
+# 钉钉消息关键字
 :local keyword "[routeros]";
 # DDNS 域名配置
 :local domainToUpdate "test.demo.com"; 
+# IPV4 类型，IPV6 类型的值为 "AAAA"。
 :local recordType "A"; 
 # 获取 公网IP模式。1：由 pppoe 拨号接口获取。2：由 4.ipw.cn 网站返回。
 :local getWanIpMode 1;
