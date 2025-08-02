@@ -1,9 +1,9 @@
 <?php
 /**
- * Aliyun OpenAPI V3 DDNS Helper
+  Aliyun OpenAPI V3 DDNS 转发代理
  **/
 
-// ------------------- 配置 START -------------------
+// ------------------- 用户配置开始 -------------------
 
 // 1. 安全令牌 (确保与RouterOS脚本中的一致)
 define('SECURITY_TOKEN', 'Any_Random_String_8848!');
@@ -18,7 +18,7 @@ const ALLOWED_ACCESS_KEY_IDS = [
 //    请确保 'logs' 文件夹存在，并且Web服务器用户对其有写入权限。
 define('LOG_FILE', 'ddns_logs/ddns_activity.log');
 
-// ------------------- 配置 END ---------------------
+// ------------------- 用户配置结束 ---------------------
 
 // --- 安全检查：在执行任何操作之前，首先验证请求的合法性 ---
 if (empty($_GET['security_Token']) || $_GET['security_Token'] !== SECURITY_TOKEN) {
@@ -70,20 +70,21 @@ class AliyunDdnsHelper
         }
     }
 
+    // 查询域名解析
     private function performQuery($getData) {
-        // ... (此函数及后续所有函数都与之前成功运行的版本完全相同)
         $domainName = $getData['domainName'] ?? '';
         if (empty($domainName)) { throw new Exception("查询任务中缺少域名。"); }
         $request = $this->createBaseRequest('GET', 'DescribeSubDomainRecords');
         $request['queryParam'] = ['SubDomain' => $domainName, 'Type' => $getData['recordType'] ?? 'A'];
         $this->signAndCall($request);
     }
-    
+
+    // 更新域名解析
     private function performUpdate($getData) {
         $recordId = $getData['recordId'] ?? '';
         $rr = $getData['rr'] ?? '';
         $newIp = $getData['newIp'] ?? '';
-        if (empty($recordId) || !isset($rr) || empty($newIp)) { throw new Exception("Missing 'recordId', 'rr', or 'newIp' for update task."); }
+        if (empty($recordId) || !isset($rr) || empty($newIp)) { throw new Exception("更新域名解析任务中缺少 'recordId'、'rr', 或 'newIp' 参数。"); }
         $request = $this->createBaseRequest('GET', 'UpdateDomainRecord');
         $request['queryParam'] = ['RecordId' => $recordId, 'RR' => $rr, 'Value' => $newIp, 'Type' => $getData['recordType'] ?? 'A'];
         $this->signAndCall($request);
@@ -147,7 +148,7 @@ class AliyunDdnsHelper
 }
 
 /**
- * 简单的日志记录函数
+ * 日志记录函数
  * @param string $level 日志级别 (e.g., INFO, WARNING, ERROR, SUCCESS)
  * @param string $message 日志消息
  */
@@ -170,15 +171,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit;
 }
 
-// 准备一个安全的、用于记录日志的请求数据副本
 $log_request_data = $_GET;
-// 对 AccessKeySecret 进行脱敏处理，绝不将其记录在日志中
+// 对 AccessKeySecret 进行脱敏处理
 if (isset($log_request_data['AccessKeySecret'])) {
     $log_request_data['AccessKeySecret'] = '[REDACTED]';
 }
 // 将脱敏后的完整请求参数以JSON格式写入日志
 write_log('信息', '收到的请求：' . json_encode($log_request_data));
-// --- !!! 新增的请求审计日志 END !!! ---
 try {
     $helper = new AliyunDdnsHelper($_GET['AccessKeyId'] ?? null, $_GET['AccessKeySecret'] ?? null);
     $helper->handleRequest($_GET);
