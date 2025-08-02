@@ -10,3 +10,5 @@
 - RouterOS 脚本目前的设置是 IPV4，如要支持 IPV6，需要将 recordType 的值由 A 改为 AAAA，同时修改获取公网 IP 的方式：如从支持 IPV6 的路由器接口获取 IP，或者由 https://6.ipw.cn 之类的网站返回 IP。
 - 转发代理目前只有一个 PHP 版本，以后可能会增加其它语言版本。
 - RouterOS 脚本建议由 PPPOE 拨号 的 Profiles 配置中的 On Up 脚本中调用。最好是先用 delay 3s 命令延时几秒。
+- RouterDDNS.txt 为 RouterOS 脚本文件。
+- aliyun-ddns.php 为 PHP 转发代理。
