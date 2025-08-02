@@ -40,7 +40,6 @@
       :log info "查询 $site 网站...";
 	  :do {
 	    :local fetchResult [/tool fetch url=$site as-value output=user];
-	    :log info $fetchResult->"status";
 	    :if (($fetchResult->"status") != "finished") do={
 	    :log error ("Fetch 命令失败，状态：" . ($fetchResult->"status"));
         } else={:set currentIp ($fetchResult->"data");} 
@@ -63,7 +62,7 @@
     :if (($queryResult->"status") = "finished") do={
       :local responseString ($queryResult->"data");
       # --- 3. 解析结果 ---
-      :log info ("接收到的响应数据：" . $responseString);
+      # :log info ("接收到的响应数据：" . $responseString);
       :if ([:find $responseString "\"TotalCount\":0"] > 0) do={
         :log error ("从 API 服务器收到错误或意外响应。查询域名解析失败，状态： " . ($queryResult->"status") . ", 数据： " . ($queryResult->"data"));
         :log error "未查询到域名'$domainToUpdate 的 '$recordType' 类型解析记录。";
@@ -77,7 +76,7 @@
            :if ($start != 0) do={ :set start ($start + 9); :local end [:find $responseString "\"" $start]; :set recordValue [:pick $responseString $start $end]; }
            :set start [:find $responseString "\"RR\":\""];
            :if ($start != 0) do={ :set start ($start + 6); :local end [:find $responseString "\"" $start]; :set recordRR [:pick $responseString $start $end]; }
-           :log info "解析后的字符串 -> RecordID: $recordId, Value: $recordValue, RR: $recordRR";
+           # :log info "解析后的字符串 -> RecordID: $recordId, Value: $recordValue, RR: $recordRR";
            :if ([:len $recordId] > 0 and [:len $recordValue] > 0 and [:len $recordRR] > 0) do={
              # --- 4. 比较并更新IP ---
              :if ($recordValue = $currentIp) do={
