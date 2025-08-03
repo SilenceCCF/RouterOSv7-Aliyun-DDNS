@@ -16,8 +16,9 @@ const ALLOWED_ACCESS_KEY_IDS = [
 // 3. 日志文件路径
 //    建议将日志文件放在网站根目录之外，或者放在一个配置了禁止访问的目录中。
 //    请确保 'logs' 文件夹存在，并且Web服务器用户对其有写入权限。
+//    LOG_ENABLED 为日志开关。
 define('LOG_FILE', 'ddns_logs/ddns_activity.log');
-
+define('LOG_ENABLED', true); 
 // ------------------- 用户配置结束 ---------------------
 
 // --- 安全检查：在执行任何操作之前，首先验证请求的合法性 ---
@@ -153,6 +154,9 @@ class AliyunDdnsHelper
  * @param string $message 日志消息
  */
 function write_log($level, $message) {
+    // 检查日志开关。
+    if (LOG_ENABLED === false) {
+        return;	
     // 默认时区，例如 Asia/Shanghai
     date_default_timezone_set('Asia/Shanghai');
     $timestamp = date('Y-m-d H:i:s T');
@@ -187,3 +191,4 @@ try {
     header("Content-Type: application/json");
     echo json_encode(['错误' => $e->getMessage()]);
 }
+
