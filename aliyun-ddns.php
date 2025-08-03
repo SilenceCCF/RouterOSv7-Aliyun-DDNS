@@ -157,6 +157,7 @@ function write_log($level, $message) {
     // 检查日志开关。
     if (LOG_ENABLED === false) {
         return;	
+    }
     // 默认时区，例如 Asia/Shanghai
     date_default_timezone_set('Asia/Shanghai');
     $timestamp = date('Y-m-d H:i:s T');
@@ -191,4 +192,5 @@ try {
     header("Content-Type: application/json");
     echo json_encode(['错误' => $e->getMessage()]);
 }
+
 
