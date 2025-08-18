@@ -9,6 +9,7 @@
 - 为防止转发代理被滥用，使用了安全令牌（securityToken）和白名单，安全令牌需要 RouterOS 脚本和 PHP 代码中保持一致，白名单在 PHP 代码中添加。详见代码中的注释。
 - RouterOS 脚本中增加了一个通过钉钉机器人发送消息通知功能，若不需要可自行屏蔽。
 - 路由器公网 IP 的获取由从 /ip/addresses 中查询改为从 PPPOE 拨号的 On Up 事件脚本中获取，好处是无须在 AliyunDDNS 脚本中指定接口名称。
+- 脚本支持多条 PPPOE 拨号线路。
 - 转发代理目前只有一个 PHP 版本，以后可能会增加其它语言版本。
 - PHP 端有日志功能，并可自行关闭，详见代码中用户配置部分。日志中不会记录用户的 AccessKeySecret。
 - AliyunDDNS.txt 为 RouterOS 进行动态域名操作的主脚本文件。
