@@ -1,0 +1,127 @@
+# RouterOS Script for Aliyun DDNS
+# 采用 V7 版脚本编写。
+# 使用简化的 DDNS专用 PHP 代理转发数据请示，也可使用其它语言编写的 代理。
+
+# --- 用户配置 ---
+:local phpProxyUrl "https://MyPHPProxy.com/routeros/aliyun-ddns.php"
+# 阿里云的 AccessKey
+:local akId "LTAxxxxxxxx"
+:local akSecret "xxxxxxx"
+# securityToken 为用户自定义的安全令牌，可防止 PHP 代理被滥用，应与 PHP 代理中设置的一致。
+:local securityToken "Any_Random_String_8848!";
+
+# --- 接口 -> 域名 映射关系 (在这里扩展) ---
+# 如果只有一条 pppoe 线路，直接在 Domain 中指定域名，ISP 为运营商名称，下面两行 if 屏蔽即可。
+:local Domain "ddns.yourdomain.com"
+:local ISP "联通"
+# 如果有多条 pppoe 线路，上面两个变量留中，在下面指定 pppoe 拨号接口和对应的域名、运营商。
+# if ($ifname = "pppoe-out-LT") do={:set Domain "lt.domain.com";:set ISP "联通"}
+# if ($ifname = "pppoe-out-YD") do={:set Domain "yd.domain.com";:set ISP "移动"}
+# 如果有第三个拨号，在这里继续添加。
+
+# --- 用户配置结束 ---
+
+# 调用钉钉发送通知（可选）
+# 关键字模式。填写你自己钉钉机器人的 webhook 地址和关键字。
+:global dingtalk do={
+    # 钉钉机器人的 webhook 地址
+    :local webhook  "https://oapi.dingtalk.com/robot/send?access_token=xxxx"
+    # 关键字
+    :local keyword "关键字";
+    # 发送时间
+    :local now ([/system/clock get date] ." ".[/system/clock get time])
+    :local data "{\"msgtype\": \"text\", \"text\": {\"content\": \"$now $1 $keyword\"}}"
+    :local header "Content-Type:application/json";
+    :log info "data: $data"
+     if ([:len $token] > 0) do={
+    do {  
+        /tool/fetch http-method=post mode=https http-header-field="$header" http-data="$data" url="$webhook"
+    } on-error={log error "发送钉钉消息失败。"}
+    }
+}
+
+# --- 合法性检查 ---
+# 检查接口
+:if ([:len $ifname] = 0) do={
+    :log warning "PPPOE 接口名称为空，脚本退出。"
+    :quit
+}
+# 检查域名
+:if ([:len $Domain] = 0) do={
+    :log warning "域名为空，请检查 Domain 变量。脚本退出。"
+    :quit
+} else={
+        :log info "$ISP接口：匹配到目标域名: $Domain"
+   }
+# 检查公网 IP 地址
+:if ([:len $currentIP] = 0) do={
+    :log error "获取当前公网 IP 失败，脚本退出。";
+    :quit
+}
+
+  :log info "$ISP接口当前公网 IP：$currentIP";  
+  # --- 查询域名当前解析信息 ---
+  :log info "查询域名 $Domain 当前的解析记录...";
+  :local queryUrl "$phpProxyUrl?";
+  :set queryUrl ($queryUrl . "AccessKeyId=$akId");
+  :set queryUrl ($queryUrl . "&AccessKeySecret=$akSecret");
+  :set queryUrl ($queryUrl . "&task=query");
+  :set queryUrl ($queryUrl . "&domainName=$Domain");
+  :set queryUrl ($queryUrl . "&recordType=A");
+  :set queryUrl ($queryUrl . "&security_Token=$securityToken");
+  :do {
+    :local queryResult [/tool fetch url=$queryUrl as-value output=user];
+    :if (($queryResult->"status") = "finished") do={
+      :local responseString ($queryResult->"data");
+      # --- 解析结果 ---
+      #:log info ("接收到的响应数据：" . $responseString);
+      :if ([:find $responseString "\"TotalCount\":0"] > 0) do={
+        :log error ("从 API 服务器收到错误或意外响应。查询域名解析失败，状态： " . ($queryResult->"status") . ", 数据： " . ($queryResult->"data"));
+        :log error "未查询到域名 $Domain 的 A 类型解析记录。";
+      } else={
+           :local recordId;
+           :local recordValue;
+           :local recordRR;
+           :local start [:find $responseString "\"RecordId\":\""];
+           :if ($start != 0) do={ :set start ($start + 12); :local end [:find $responseString "\"" $start]; :set recordId [:pick $responseString $start $end]; }
+           :set start [:find $responseString "\"Value\":\""];
+           :if ($start != 0) do={ :set start ($start + 9); :local end [:find $responseString "\"" $start]; :set recordValue [:pick $responseString $start $end]; }
+           :set start [:find $responseString "\"RR\":\""];
+           :if ($start != 0) do={ :set start ($start + 6); :local end [:find $responseString "\"" $start]; :set recordRR [:pick $responseString $start $end]; }
+           :if ([:len $recordId] > 0 and [:len $recordValue] > 0 and [:len $recordRR] > 0) do={
+             # --- 比较并更新IP ---
+             :if ($recordValue = $currentIP) do={
+               :log info "IP 地址相同，无须更新 ($currentIP)。";
+             } else={
+               :log info "$ISP接口：$ifname 的 IP地址由 $recordValue 变更为 $currentIP，开始更新解析记录...";  
+               :local updateUrl "$phpProxyUrl?";
+               :set updateUrl ($updateUrl . "AccessKeyId=$akId");
+               :set updateUrl ($updateUrl . "&AccessKeySecret=$akSecret");
+               :set updateUrl ($updateUrl . "&task=update");
+               :set updateUrl ($updateUrl . "&recordId=$recordId");
+               :set updateUrl ($updateUrl . "&rr=$recordRR");
+               :set updateUrl ($updateUrl . "&newIp=$currentIP");
+               :set updateUrl ($updateUrl . "&recordType=A");
+               :set updateUrl ($updateUrl . "&security_Token=$securityToken");
+               do {
+                 :local updateFetchResult [/tool fetch url=$updateUrl as-value output=user];
+                 :if (($updateFetchResult->"status") != "finished") do={
+                   :log error (" fetch 命令失败，状态：" . ($updateFetchResult->"status"));
+                 } else={
+                   :local updateResultString ($updateFetchResult->"data");
+                   :local searchPattern ("\"RecordId\":\"" . $recordId);        
+                   :if ([:find $updateResultString $searchPattern] > 0) do={
+                     :log info "$ISP 接口：域名 $Domain 的 DNS 解析记录更新为 $currentIP。";
+                     # 发送钉钉消息，可选。
+                     :local msg "$ISP 接口：公网地址变更为 $currentIP，域名 $Domain 解析修改成功。"
+                     [$dingtalk ($ISP $msg)]
+                   } else={
+                     :log error ("无法更新 DNS 解析记录。原因： " . $updateResultString);
+                   }
+                 }
+               } on-error={:log error "Fetch 命令修改解析失败。"}
+             }  
+           } else={:log error "从响应数据中解析值失败。";}
+      }         	   
+   }  
+  } on-error={:log error "Fetch 命令查询解析失败。"};
