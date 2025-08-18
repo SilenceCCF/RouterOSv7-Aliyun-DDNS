@@ -1,0 +1,16 @@
+# 此脚本内容填写在 PPPOE 拨号接口使用的 Profile 配置中，
+# 具体位置在菜单 PPP/Profiles 标签页下，打开对应的
+# Profile 条目，切换到 script 标签页，在 On Up 编辑框
+# 中填入本脚本内容
+
+# 要调用的 DDNS 脚本名称
+:local scrName "AliyunDDNS"
+# 获取拨号接口名称
+:local ifname [/interface get $interface name];
+# 获取公网IP
+:local currentIP $"local-address";
+# 定义要传输的变量
+:local var1 "ifname=$ifname"
+:local var2 "currentIP=$currentIP"
+# 调用 DDNS 脚本并注入变量
+:execute script="[[:parse \"[:parse [/system script get $scrName source]] $var1 $var2\"]]"
