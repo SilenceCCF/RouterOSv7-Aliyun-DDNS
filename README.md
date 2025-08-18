@@ -1,4 +1,4 @@
-<img width="513" height="107" alt="image" src="https://github.com/user-attachments/assets/8969ac54-027e-483e-a826-93276dc2d462" /># RouterOSv7 For Aliyun DDNS
+# RouterOSv7 For Aliyun DDNS
 支持阿里云域名动态解析的 RouterOS V7 脚本及对应的转发代理。
 
 说明：
