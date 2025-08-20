@@ -1,0 +1,17 @@
+# 钉钉发送通知消息
+# 钉钉机器人的 webhook 地址
+:local webhook  "https://oapi.dingtalk.com/robot/send?access_token=xxxx"
+# 关键字
+:local keyword "your keyword";
+# 发送时间
+:local now ([/system/clock get date] ." ".[/system/clock get time])
+# 构造 json 格式数据
+:local data "{\"msgtype\": \"text\", \"text\": {\"content\": \"$now $msg $keyword\"}}"
+:local header "Content-Type:application/json"
+if ([:len $webhook] > 0) do={
+    do {  
+        /tool/fetch http-method=post mode=https http-header-field="$header" http-data="$data" url="$webhook"
+       :log info "发送钉钉消息成功。"
+    } on-error={log error "发送钉钉消息失败。"}
+}
+
