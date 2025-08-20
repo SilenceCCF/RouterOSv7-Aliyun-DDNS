@@ -22,22 +22,13 @@
 # --- 用户配置结束 ---
 
 # 调用钉钉发送通知（可选）
-# 关键字模式。填写你自己钉钉机器人的 webhook 地址和关键字。
-:global dingtalk do={
-    # 钉钉机器人的 webhook 地址
-    :local webhook  "https://oapi.dingtalk.com/robot/send?access_token=xxxx"
-    # 关键字
-    :local keyword "关键字";
-    # 发送时间
-    :local now ([/system/clock get date] ." ".[/system/clock get time])
-    :local data "{\"msgtype\": \"text\", \"text\": {\"content\": \"$now $1 $keyword\"}}"
-    :local header "Content-Type:application/json";
-    :log info "data: $data"
-     if ([:len $token] > 0) do={
-    do {  
-        /tool/fetch http-method=post mode=https http-header-field="$header" http-data="$data" url="$webhook"
-    } on-error={log error "发送钉钉消息失败。"}
-    }
+:local SendDingTalk do={
+    # 指定钉钉脚本名称
+    :local scrName "dingtalk"
+    # 构造适合钉钉脚本调用的参数
+    :local var1 ("msg=\\\"" . ("" . $1) . "\\\"")
+    # 调用钉钉脚本
+    :execute script="[[:parse \"[:parse [/system script get $scrName source]] $var1\"]]"
 }
 
 # --- 合法性检查 ---
@@ -114,7 +105,7 @@
                      :log info "$ISP 接口：域名 $Domain 的 DNS 解析记录更新为 $currentIP。";
                      # 发送钉钉消息，可选。
                      :local msg "$ISP 接口：公网地址变更为 $currentIP，域名 $Domain 解析修改成功。"
-                     [$dingtalk ($ISP $msg)]
+                     [$SendDingTalk $msg]                     
                    } else={
                      :log error ("无法更新 DNS 解析记录。原因： " . $updateResultString);
                    }
