@@ -10,7 +10,7 @@
 # 获取公网IP
 :local currentIP $"local-address";
 # 定义要传输的变量
-:local var1 "ifname=$ifname"
-:local var2 "currentIP=$currentIP"
+:local var1 ("ifname=\\\"" . $ifname  . "\\\"")
+:local var2 ("currentIP=\\\"" . $currentIP  . "\\\"")
 # 调用 DDNS 脚本并注入变量
 :execute script="[[:parse \"[:parse [/system script get $scrName source]] $var1 $var2\"]]"
