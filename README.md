@@ -14,4 +14,5 @@
 - PHP 端有日志功能，并可自行关闭，详见代码中用户配置部分。日志中不会记录用户的 AccessKeySecret。
 - AliyunDDNS.txt 为 RouterOS 进行动态域名操作的主脚本文件。
 - PPP_Profile_OnUp.txt 的内容填写在 PPPOE 拨号接口使用的的 Profile 配置中的 On Up 脚本处，它的用途是将获取到的接口名称和公网 IP 地址传递给 AliyunDDNS 脚本。
+- dingtalk.txt 为发送钉钉消息用脚本。
 - aliyun-ddns.php 为 PHP 转发代理。
