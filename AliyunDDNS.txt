@@ -10,6 +10,12 @@
 # securityToken 为用户自定义的安全令牌，可防止 PHP 代理被滥用，应与 PHP 代理中设置的一致。
 :local securityToken "Any_Random_String_8848!";
 
+# 设备位置
+:local location "家"
+
+# 发送消息接口，钉钉（dingtalk）和企业微信（wecom）可选：
+:local msgtype "dingtalk"
+
 # --- 接口 -> 域名 映射关系 (在这里扩展) ---
 # 如果只有一条 pppoe 线路，直接在 Domain 中指定域名，ISP 为运营商名称，下面两行 if 屏蔽即可。
 :local Domain "ddns.yourdomain.com"
@@ -21,14 +27,12 @@
 
 # --- 用户配置结束 ---
 
-# 调用钉钉发送通知（可选）
-:local SendDingTalk do={
-    # 指定钉钉脚本名称
-    :local scrName "dingtalk"
-    # 构造适合钉钉脚本调用的参数
-    :local var1 ("msg=\\\"" . ("" . $1) . "\\\"")
-    # 调用钉钉脚本
-    :execute script="[[:parse \"[:parse [/system script get $scrName source]] $var1\"]]"
+# 发送通知（可选）
+:local SendMsg do={
+  # 指定发送消息脚本名称
+  :local scrName $1
+  :local dtFunc [:parse [/system script get $scrName source]]
+  $dtFunc msg=$2
 }
 
 # --- 合法性检查 ---
@@ -103,9 +107,9 @@
                    :local searchPattern ("\"RecordId\":\"" . $recordId);        
                    :if ([:find $updateResultString $searchPattern] > 0) do={
                      :log info "$ISP 接口：域名 $Domain 的 DNS 解析记录更新为 $currentIP。";
-                     # 发送钉钉消息，可选。
-                     :local msg "$ISP 接口：公网地址变更为 $currentIP，域名 $Domain 解析修改成功。"
-                     [$SendDingTalk $msg]                     
+                     # 发送消息，可选。
+                     :local msg "【$location】$ISP 接口：公网地址变更为 $currentIP，域名 $Domain 解析修改成功。"
+                     [$SendMsg $msgtype $msg]                     
                    } else={
                      :log error ("无法更新 DNS 解析记录。原因： " . $updateResultString);
                    }
