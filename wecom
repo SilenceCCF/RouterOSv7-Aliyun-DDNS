@@ -1,0 +1,17 @@
+# 使用企业微信机器人发送通知消息
+if ([:len $msg] > 0) do={
+  # 企业微信机器人的 webhook 地址
+  :local webhook  "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="xx-xx-xx-xx"
+  # 发送时间
+  :local now ([/system/clock get date] ." ".[/system/clock get time])
+  # 构造 json 格式数据
+  :local data "{\"msgtype\": \"markdown_v2\", \"markdown_v2\": {\"content\": \"$now $msg\"}}"
+  :local header "Content-Type:application/json"
+  if ([:len $webhook] > 0) do={
+      do {  
+          /tool/fetch http-method=post mode=https http-header-field="$header" http-data="$data" url="$webhook"
+         :log info "发送企业微信消息成功。"
+      } on-error={log error "发送企业微信消息失败。"}
+  }  else={:log warning "webhook 地址为空。"}
+} else={:log warning "不能发送空消息。"}
+
