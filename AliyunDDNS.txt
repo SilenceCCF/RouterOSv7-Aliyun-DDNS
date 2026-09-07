@@ -16,14 +16,7 @@
 # 发送消息接口，钉钉（dingtalk）和企业微信（wecom）可选：
 :local msgtype "dingtalk"
 
-# --- 接口 -> 域名 映射关系 (在这里扩展) ---
-# 如果只有一条 pppoe 线路，直接在 Domain 中指定域名，ISP 为运营商名称，下面两行 if 屏蔽即可。
-:local Domain "ddns.yourdomain.com"
-:local ISP "联通"
-# 如果有多条 pppoe 线路，上面两个变量留中，在下面指定 pppoe 拨号接口和对应的域名、运营商。
-# if ($ifname = "pppoe-out-LT") do={:set Domain "lt.domain.com";:set ISP "联通"}
-# if ($ifname = "pppoe-out-YD") do={:set Domain "yd.domain.com";:set ISP "移动"}
-# 如果有第三个拨号，在这里继续添加。
+# 删除接口、域名及运营商映射关系语句，改为直接由参数传入
 
 # --- 用户配置结束 ---
 
