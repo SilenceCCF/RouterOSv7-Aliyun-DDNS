@@ -8,7 +8,7 @@ delay 2s
 # 要调用的 DDNS 脚本名称
 :local scrName "AliyunDDNS"
 # 此接口使用的域名
-:local cfDomain "yd.yourdomain.com"
+:local Domain "yd.yourdomain.com"
 # 此接口的运营商名称
 :local ISP "移动"
 # 获取拨号接口名称
@@ -17,4 +17,4 @@ delay 2s
 :local currentIP $"local-address"
 # 以函数形式调用脚本，不再使用 execute 命令（权限受限）
 :local ddnsFunc [:parse [/system script get $scrName source]]
-$ddnsFunc cfDomain=$cfDomain ISP=$ISP ifname=$ifname currentIP=$currentIP
+$ddnsFunc Domain=$Domain ISP=$ISP ifname=$ifname currentIP=$currentIP
