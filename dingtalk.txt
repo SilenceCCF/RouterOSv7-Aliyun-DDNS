@@ -11,7 +11,7 @@ if ([:len $msg] > 0) do={
   :local header "Content-Type:application/json"
   if ([:len $webhook] > 0) do={
       do {  
-          /tool/fetch http-method=post mode=https http-header-field="$header" http-data="$data" url="$webhook"
+          /tool/fetch http-method=post mode=https http-header-field="$header" http-data="$data" url="$webhook" output=none
          :log info "发送钉钉消息成功。"
       } on-error={log error "发送钉钉消息失败。"}
   } else={:log warning "webhook 地址为空。"}
